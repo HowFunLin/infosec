@@ -2,6 +2,7 @@ package SymmetricEncryption;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -14,7 +15,23 @@ public class DES
 {
 	public static void main(String[] args)
 	{
-		encrypt();
+
+		//密钥
+		byte[] des_key = new byte[8];
+
+		//明文
+		byte[] des_input = new byte[8];
+
+		for (int i = 0; i < 8; i++)
+		{
+			des_key[i] = 0x11;
+			des_input[i] = 0x11;
+		}
+		
+		encrypt(des_key, des_input);
+		
+		BitsArray bk = new BitsArray(des_key);
+		BitsArray bi = new BitsArray(des_input);
 	}
 	
 	/**
@@ -34,29 +51,14 @@ public class DES
 	/**
 	 * 加密算法
 	 */
-	public static void encrypt()
+	public static void encrypt(byte[] des_key, byte[] des_input)
 	{
 		//DES加密算法
 		Cipher des = null;
 
-		//密钥
-		byte[] des_key = new byte[8];
-
-		//明文
-		byte[] des_input = new byte[8];
-
 		//加密后的输出
 		byte[] des_output = null;
-
-		for (int i = 0; i < 8; i++)
-		{
-			des_key[i] = 0x11;
-			des_input[i] = 0x11;
-		}
 		
-		BitsArray bs = new BitsArray(des_key);
-		System.out.println(bs.toString());
-
 		//创建DES密钥
 		SecretKey secretKey = new SecretKeySpec(des_key, "DES");
 
@@ -136,7 +138,7 @@ class BitsArray
 	}
 	
 	//转换位字符数组
-	byte[] ToByteArray()
+	byte[] toByteArray()
 	{
 		String[] temp = new String[8];
 		for(int i = 0; i < 8; i++)
@@ -147,12 +149,62 @@ class BitsArray
 		}
 		
 	    byte[] b = new byte[8];
-	    for (int i = 0; i < b.length; i++)
-	    {
-	        b[i] = Long.valueOf(temp[i], 2).byteValue();
-	    }
+		for (int i = 0; i < b.length; i++) b[i] = Long.valueOf(temp[i], 2).byteValue();
 	    
 	    return b;
+	}
+	
+	//与另一个位串进行异或操作
+	void xor(BitsArray other)
+	{
+		String otherStr = other.toString();
+		char[] cs = str.toCharArray();
+		for(int i = 0; i < otherStr.length(); i++)
+		{
+			if(str.charAt(i) == otherStr.charAt(i)) cs[i] = '0';
+			else cs[i] = '1';
+		}
+		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
+	}
+	
+	//计算位串中1的个数
+	int OnesCount()
+	{
+		int count = 0;
+		for(int i = 0; i < str.length(); i++) if(str.charAt(i) == 1) count++;
+		
+		return count;
+	}
+	
+	//克隆一个自身的拷贝
+	@Override
+	protected BitsArray clone()
+	{
+		byte[] bs = toByteArray();
+		BitsArray bitsArray = new BitsArray(bs);
+		
+		return bitsArray;
+	}
+	
+	void setOne(int index)
+	{
+		char[] cs = str.toCharArray();
+		cs[index] = '1';
+		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
+	}
+	
+	void setZero(int index)
+	{
+		char[] cs = str.toCharArray();
+		cs[index] = '0';
+		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
+	}
+	
+	void set(int index, int value)
+	{
+		char[] cs = str.toCharArray();
+		cs[index] = (char) ('0' + value);
+		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
 	}
 	
 	@Override
