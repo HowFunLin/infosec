@@ -3,6 +3,7 @@ package SymmetricEncryption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -15,23 +16,87 @@ public class DES
 {
 	public static void main(String[] args)
 	{
-
 		//密钥
 		byte[] des_key = new byte[8];
 
 		//明文
 		byte[] des_input = new byte[8];
+		
+		System.out.println("The default plaintext is 1111111111111111");
+		System.out.println("The default key is 1111111111111111");
 
+		//默认明文为1111111111111111
+		//默认密钥为1111111111111111
 		for (int i = 0; i < 8; i++)
 		{
 			des_key[i] = 0x11;
 			des_input[i] = 0x11;
 		}
 		
-		encrypt(des_key, des_input);
+		//加密后的密文为F40379AB9E0EC533
+		byte[] des_output = encrypt(des_key, des_input);
 		
-		BitsArray bk = new BitsArray(des_key);
-		BitsArray bi = new BitsArray(des_input);
+		System.out.println("------------------------------------------");
+		
+		BitsArray key = new BitsArray(des_key);
+		BitsArray input = new BitsArray(des_input);
+		BitsArray output = new BitsArray(des_output);
+		
+		//选择想改变位数的是明文或者密钥
+		System.out.print("Please enter which one you want to change (1.Plaintext 2.Key): ");
+		Scanner scan1 = new Scanner(System.in);
+		int select = scan1.nextInt();
+		
+		//输入想改变的位数（当超出范围时自动终止程序）
+		System.out.print("Please enter how many bits you want to change (1 <= bits <= 64): ");
+		Scanner scan2 = new Scanner(System.in);
+		int bits = scan2.nextInt();
+		if(bits > 64 || bits < 1)
+		{
+			System.out.println("Please enter correct number!");
+			System.exit(0);
+		}
+		
+		if(select == 1)
+		{
+			int count = 0; //记录总改变的位数的数量
+			int frequency = 0; //记录循环执行的次数以在循环未执行满10次时求平均值
+			
+			for(int j = 0; j < 10; j++)
+			{
+				//当位数超出时，跳出循环
+				if(j + bits > 64) break;
+				
+				//对明文进行指定位数的修改
+				for(int i = j; i < j + bits; i++)
+				{
+					if(input.toString().charAt(i) == '0') input.setOne(i);
+					else if(input.toString().charAt(i) == '1') input.setZero(i);
+				}
+				
+				//将修改后的明文输出为byte数组
+				des_input = input.toByteArray();
+				
+				//使用修改后的明文和原来的密钥进行加密运算，得到新的密文byte数组
+				byte[] des_newOutput = encrypt(des_key, des_input);
+				
+				//将新的密文byte数组转化为位串对象
+				BitsArray newOutput = new BitsArray(des_newOutput);
+				
+				//与原来输出的密文的位串进行异或操作
+				newOutput.xor(output);
+				
+				//计算异或之后位串中1的个数，即为改变的位数
+				count += newOutput.OnesCount();
+				
+				frequency++;
+			}
+			
+			System.out.println("The average number of changed bits is " + ((double) count / frequency));
+		}
+		
+		scan1.close();
+		scan2.close();
 	}
 	
 	/**
@@ -49,9 +114,12 @@ public class DES
 	}
 	
 	/**
-	 * 加密算法
+	 * DES加密算法
+	 * @param des_key 密钥
+	 * @param des_input 明文输入
+	 * @return 密文输出
 	 */
-	public static void encrypt(byte[] des_key, byte[] des_input)
+	public static byte[] encrypt(byte[] des_key, byte[] des_input)
 	{
 		//DES加密算法
 		Cipher des = null;
@@ -90,7 +158,9 @@ public class DES
 		}
 
 		// 输出加密结果
-		System.out.print(byteArrayToHex(des_output));
+		System.out.println("The cipher text is " + byteArrayToHex(des_output));
+		
+		return des_output;
 	}
 }
 
@@ -98,7 +168,10 @@ class BitsArray
 {
 	private String str;
 	
-	//构造一个指定长度的位串，初始化位值为0
+	/**
+	 * 构造一个指定长度的位串，初始化位值为0
+	 * @param length 位串的长度
+	 */
 	BitsArray(int length)
 	{
 		StringBuffer sb = new StringBuffer();
@@ -106,19 +179,28 @@ class BitsArray
 		str = sb.toString();
 	}
 	
-	//从字符数组构造位串
+	/**
+	 * 从字符数组构造位串
+	 * @param bs 用于构造位串的byte数组
+	 */
 	BitsArray(byte[] bs)
 	{
 		fromByteArray(bs);
 	}
 	
-	//返回位串的长度
+	/**
+	 * 计算位串的长度
+	 * @return 位串的长度
+	 */
 	int length()
 	{
 		return str.length();
 	}
 	
-	//完成从字符数组到位串的转换
+	/**
+	 * 完成从byte数组到位串的转换
+	 * @param bs 要转换为位串的byte数组
+	 */
 	void fromByteArray(byte[] bs)
 	{
 		StringBuffer result = new StringBuffer();
@@ -137,13 +219,16 @@ class BitsArray
 	    str =  result.toString();
 	}
 	
-	//转换位字符数组
+	/**
+	 * 将位串对象转换为byte数组
+	 * @return 位串对象对应的byte数组
+	 */
 	byte[] toByteArray()
 	{
 		String[] temp = new String[8];
+		int pos = 0;
 		for(int i = 0; i < 8; i++)
 		{
-			int pos = 0;
 			temp[i] = str.substring(pos, pos + 8);
 			pos += 8;
 		}
@@ -154,7 +239,10 @@ class BitsArray
 	    return b;
 	}
 	
-	//与另一个位串进行异或操作
+	/**
+	 * 与另一个位串进行异或操作
+	 * @param other 用于与该位串进行异或操作的位串
+	 */
 	void xor(BitsArray other)
 	{
 		String otherStr = other.toString();
@@ -167,16 +255,21 @@ class BitsArray
 		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
 	}
 	
-	//计算位串中1的个数
+	/**
+	 * 计算位串中1的个数
+	 * @return 位串中1的个数
+	 */
 	int OnesCount()
 	{
 		int count = 0;
-		for(int i = 0; i < str.length(); i++) if(str.charAt(i) == 1) count++;
+		for(int i = 0; i < str.length(); i++) if(str.charAt(i) == '1') count++;
 		
 		return count;
 	}
 	
-	//克隆一个自身的拷贝
+	/**
+	 * 克隆一个自身的拷贝
+	 */
 	@Override
 	protected BitsArray clone()
 	{
@@ -186,6 +279,10 @@ class BitsArray
 		return bitsArray;
 	}
 	
+	/**
+	 * 将指定索引位置的值设定为1
+	 * @param index 指定的索引
+	 */
 	void setOne(int index)
 	{
 		char[] cs = str.toCharArray();
@@ -193,6 +290,10 @@ class BitsArray
 		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
 	}
 	
+	/**
+	 * 将指定索引位置的值设定为0
+	 * @param index 指定的索引
+	 */
 	void setZero(int index)
 	{
 		char[] cs = str.toCharArray();
@@ -200,6 +301,11 @@ class BitsArray
 		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
 	}
 	
+	/**
+	 * 设置指定索引位置的值
+	 * @param index 指定的索引
+	 * @param value 所需设定的值
+	 */
 	void set(int index, int value)
 	{
 		char[] cs = str.toCharArray();
@@ -207,6 +313,9 @@ class BitsArray
 		str = Arrays.toString(cs).replaceAll("[\\[\\]\\s,]", "");
 	}
 	
+	/**
+	 * 返回位串的字符串形式
+	 */
 	@Override
 	public String toString()
 	{
