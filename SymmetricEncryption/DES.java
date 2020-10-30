@@ -38,6 +38,9 @@ public class DES
 		//加密后的密文为F40379AB9E0EC533
 		byte[] des_output = encrypt(des_key, des_input);
 		
+		//输出加密结果
+		System.out.println("The cipher text is " + byteArrayToHex(des_output));
+		
 		System.out.println("------------------------------------------");
 		
 		BitsArray key = new BitsArray(des_key);
@@ -54,6 +57,7 @@ public class DES
 			System.exit(0);
 		}
 		
+		/*
 		//输入想改变的位数（当超出范围时自动终止程序）
 		System.out.print("Please enter how many bits you want to change (1 <= bits <= 64): ");
 		Scanner scan2 = new Scanner(System.in);
@@ -63,112 +67,121 @@ public class DES
 			System.out.println("Please enter correct number!");
 			System.exit(0);
 		}
+		*/
 		
 		if(select == 1)
 		{
-			int count = 0; //记录总改变的位数的数量
-			
-			//总共进行十次测试
-			for(int j = 0; j < 10; j++)
-			{	
-				//利用Set中元素不能重复的特性随机得到要修改位所在的位置
-				HashSet<Integer> hs = new HashSet<Integer>();
-				for(int i = 0; i < bits; i++)
-				{
-					while(hs.size() == i) hs.add((int)(Math.random() * 64));
-				}
+			//分别计算改变1~64位时的平均改变位数并输出
+			for(int bits = 1; bits <= 64; bits++)
+			{
+				int count = 0; //记录总改变的位数的数量
 				
-				//将元素放进ArrayList以供调用
-				ArrayList<Integer> list = new ArrayList<Integer>();
-				for(int i: hs) list.add(i);
-				
-				//克隆一份原明文的备份
-				BitsArray inputCopy = input.clone();
-							
-				//对明文进行指定位数的修改
-				for(int i = 0; i < bits; i++)
-				{
-					int pos = list.get(i); //要修改的位的位置
+				//总共进行十次测试
+				for(int j = 0; j < 10; j++)
+				{	
+					//利用Set中元素不能重复的特性随机得到要修改位所在的位置
+					HashSet<Integer> hs = new HashSet<Integer>();
+					for(int i = 0; i < bits; i++)
+					{
+						while(hs.size() == i) hs.add((int)(Math.random() * 64));
+					}
 					
-					if(input.toString().charAt(pos) == '0') input.setOne(pos);
-					else if(input.toString().charAt(pos) == '1') input.setZero(pos);
+					//将元素放进ArrayList以供调用
+					ArrayList<Integer> list = new ArrayList<Integer>();
+					for(int i: hs) list.add(i);
+					
+					//克隆一份原明文的备份
+					BitsArray inputCopy = input.clone();
+								
+					//对明文进行指定位数的修改
+					for(int i = 0; i < bits; i++)
+					{
+						int pos = list.get(i); //要修改的位的位置
+						
+						if(input.toString().charAt(pos) == '0') input.setOne(pos);
+						else if(input.toString().charAt(pos) == '1') input.setZero(pos);
+					}
+					
+					//将修改后的明文输出为byte数组
+					des_input = input.toByteArray();
+					
+					//使用修改后的明文和原来的密钥进行加密运算，得到新的密文byte数组
+					byte[] des_newOutput = encrypt(des_key, des_input);
+					
+					//将新的密文byte数组转化为位串对象
+					BitsArray newOutput = new BitsArray(des_newOutput);
+					
+					//与原来输出的密文的位串进行异或操作
+					newOutput.xor(output);
+					
+					//计算异或之后位串中1的个数，即为改变的位数
+					count += newOutput.OnesCount();
+					
+					//重置已被修改的明文为原明文
+					input = inputCopy;
 				}
 				
-				//将修改后的明文输出为byte数组
-				des_input = input.toByteArray();
-				
-				//使用修改后的明文和原来的密钥进行加密运算，得到新的密文byte数组
-				byte[] des_newOutput = encrypt(des_key, des_input);
-				
-				//将新的密文byte数组转化为位串对象
-				BitsArray newOutput = new BitsArray(des_newOutput);
-				
-				//与原来输出的密文的位串进行异或操作
-				newOutput.xor(output);
-				
-				//计算异或之后位串中1的个数，即为改变的位数
-				count += newOutput.OnesCount();
-				
-				//重置已被修改的明文为原明文
-				input = inputCopy;
+				System.out.println("When changed bits = " + bits + ". The average number of changed bits is " + ((double) count / 10));
 			}
-			
-			System.out.println("The average number of changed bits is " + ((double) count / 10));
 		}
 		else if(select == 2)
 		{
-			int count = 0; //记录总改变的位数的数量
-			
-			//总共进行十次测试
-			for(int j = 0; j < 10; j++)
-			{	
-				//利用Set中元素不能重复的特性随机得到要修改位所在的位置
-				HashSet<Integer> hs = new HashSet<Integer>();
-				for(int i = 0; i < bits; i++)
-				{
-					while(hs.size() == i) hs.add((int)(Math.random() * 64));
-				}
+			//分别计算改变1~64位时的平均改变位数并输出
+			for(int bits = 1; bits <= 64; bits++)
+			{
+				int count = 0; //记录总改变的位数的数量
 				
-				//将元素放进ArrayList以供调用
-				ArrayList<Integer> list = new ArrayList<Integer>();
-				for(int i: hs) list.add(i);
-				
-				//克隆一份原密钥的备份
-				BitsArray keyCopy = key.clone();
-							
-				//对密钥进行指定位数的修改
-				for(int i = 0; i < bits; i++)
-				{
-					int pos = list.get(i); //要修改的位的位置
+				//总共进行十次测试
+				for(int j = 0; j < 10; j++)
+				{	
+					//利用Set中元素不能重复的特性随机得到要修改位所在的位置
+					HashSet<Integer> hs = new HashSet<Integer>();
+					for(int i = 0; i < bits; i++)
+					{
+						while(hs.size() == i) hs.add((int)(Math.random() * 64));
+					}
 					
-					if(key.toString().charAt(pos) == '0') key.setOne(pos);
-					else if(key.toString().charAt(pos) == '1') key.setZero(pos);
+					//将元素放进ArrayList以供调用
+					ArrayList<Integer> list = new ArrayList<Integer>();
+					for(int i: hs) list.add(i);
+					
+					//克隆一份原密钥的备份
+					BitsArray keyCopy = key.clone();
+								
+					//对密钥进行指定位数的修改
+					for(int i = 0; i < bits; i++)
+					{
+						int pos = list.get(i); //要修改的位的位置
+						
+						if(key.toString().charAt(pos) == '0') key.setOne(pos);
+						else if(key.toString().charAt(pos) == '1') key.setZero(pos);
+					}
+					
+					//将修改后的密钥输出为byte数组
+					des_key = key.toByteArray();
+					
+					//使用修改后的密钥和原来的明文进行加密运算，得到新的密文byte数组
+					byte[] des_newOutput = encrypt(des_key, des_input);
+					
+					//将新的密文byte数组转化为位串对象
+					BitsArray newOutput = new BitsArray(des_newOutput);
+					
+					//与原来输出的密文的位串进行异或操作
+					newOutput.xor(output);
+					
+					//计算异或之后位串中1的个数，即为改变的位数
+					count += newOutput.OnesCount();
+					
+					//重置已被修改的密钥为原密钥
+					key = keyCopy;
 				}
 				
-				//将修改后的密钥输出为byte数组
-				des_key = key.toByteArray();
-				
-				//使用修改后的密钥和原来的明文进行加密运算，得到新的密文byte数组
-				byte[] des_newOutput = encrypt(des_key, des_input);
-				
-				//将新的密文byte数组转化为位串对象
-				BitsArray newOutput = new BitsArray(des_newOutput);
-				
-				//与原来输出的密文的位串进行异或操作
-				newOutput.xor(output);
-				
-				//计算异或之后位串中1的个数，即为改变的位数
-				count += newOutput.OnesCount();
-				
-				//重置已被修改的密钥为原密钥
-				key = keyCopy;
+				System.out.println("When changed bits = " + bits + ". The average number of changed bits is " + ((double) count / 10));
 			}
-			
-			System.out.println("The average number of changed bits is " + ((double) count / 10));
 		}
 		
 		scan1.close();
-		scan2.close();
+		//scan2.close();
 	}
 	
 	/**
@@ -176,7 +189,6 @@ public class DES
 	 * @param bs 所需转换的字节数组
 	 * @return 转换得到的16进制字符串
 	 */
-	/*
 	public static String byteArrayToHex(byte[] bs)
 	{
 		StringBuilder res = new StringBuilder();
@@ -185,7 +197,6 @@ public class DES
 			
 		return res.toString();
 	}
-	*/
 	
 	/**
 	 * DES加密算法
@@ -231,9 +242,6 @@ public class DES
 			e.printStackTrace();
 		}
 
-		// 输出加密结果
-		//System.out.println("The cipher text is " + byteArrayToHex(des_output));
-		
 		return des_output;
 	}
 }
