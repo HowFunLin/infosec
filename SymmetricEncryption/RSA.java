@@ -184,7 +184,7 @@ public class RSA
 		
 		System.out.println();
 		System.out.println("The public key KU = {" + rsa.e + ", " + rsa.n + "}");
-		System.out.println("The public key KR = {" + rsa.d + ", " + rsa.n + "}");
+		System.out.println("The private key KR = {" + rsa.d + ", " + rsa.n + "}");
 		System.out.println();
 		
 		int ciphertext = rsa.encrypt();
